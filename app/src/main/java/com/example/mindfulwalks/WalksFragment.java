@@ -1,20 +1,23 @@
 package com.example.mindfulwalks;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 public class WalksFragment extends Fragment {
 
-    TextView txtList;
+    private RecyclerView recyclerView;
+    private CheckpointAdapter adapter;
 
     @Nullable
     @Override
@@ -23,9 +26,11 @@ public class WalksFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_walks, container, false);
-        txtList = view.findViewById(R.id.txtWalksList);
 
-        updateList();
+        recyclerView = view.findViewById(R.id.recyclerCheckpoints);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        loadList();
 
         return view;
     }
@@ -33,25 +38,20 @@ public class WalksFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        updateList();
+        loadList();
     }
 
-    private void updateList() {
+    private void loadList() {
         List<Checkpoint> list = CheckpointStorage.getCheckpoints();
 
-        if (list.isEmpty()) {
-            txtList.setText("No checkpoints yet.");
-            return;
-        }
+        adapter = new CheckpointAdapter(list, checkpoint -> {
+            // On item click → open detail screen
+            Intent i = new Intent(getActivity(), CheckpointDetailActivity.class);
+            i.putExtra("checkpointId", checkpoint.id);
+            startActivity(i);
+        });
 
-        StringBuilder builder = new StringBuilder();
-        for (Checkpoint c : list) {
-            builder.append("• ").append(c.title)
-                    .append("\n  Address: ").append(c.address)
-                    .append("\n  Prompt: ").append(c.prompt)
-                    .append("\n\n");
-        }
-
-        txtList.setText(builder.toString());
+        recyclerView.setAdapter(adapter);
     }
 }
+
