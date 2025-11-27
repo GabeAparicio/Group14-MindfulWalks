@@ -22,6 +22,7 @@ public class AddCheckpointFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_add_checkpoint, container, false);
 
         editTitle = view.findViewById(R.id.editTitle);
@@ -29,28 +30,45 @@ public class AddCheckpointFragment extends Fragment {
         editPrompt = view.findViewById(R.id.editPrompt);
         btnSave = view.findViewById(R.id.btnSaveCheckpoint);
 
-        btnSave.setOnClickListener(v -> {
-            String title = editTitle.getText().toString();
-            String address = editAddress.getText().toString();
-            String prompt = editPrompt.getText().toString();
-
-            // Very simple validation
-            if (title.isEmpty() || address.isEmpty() || prompt.isEmpty()) {
-                Toast.makeText(getActivity(), "Please fill all fields", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Checkpoint cp = new Checkpoint(title, address, prompt);
-            CheckpointStorage.addCheckpoint(cp);
-
-            Toast.makeText(getActivity(), "Checkpoint saved!", Toast.LENGTH_SHORT).show();
-
-            // clear fields
-            editTitle.setText("");
-            editAddress.setText("");
-            editPrompt.setText("");
-        });
+        btnSave.setOnClickListener(v -> saveCheckpoint());
 
         return view;
     }
+
+    private void saveCheckpoint() {
+
+        String title = editTitle.getText().toString().trim();
+        String address = editAddress.getText().toString().trim();
+        String prompt = editPrompt.getText().toString().trim();
+
+        // Improved validation
+        if (title.isEmpty()) {
+            editTitle.setError("Title is required");
+            return;
+        }
+        if (address.isEmpty()) {
+            editAddress.setError("Address is required");
+            return;
+        }
+        if (prompt.isEmpty()) {
+            editPrompt.setError("Prompt is required");
+            return;
+        }
+
+        int newId = CheckpointStorage.getNextId();
+
+        Checkpoint cp = new Checkpoint(newId, title, address, prompt);
+
+        CheckpointStorage.addCheckpoint(cp);
+
+        Toast.makeText(getActivity(),
+                "Checkpoint saved successfully!",
+                Toast.LENGTH_SHORT).show();
+
+        // Clear input fields
+        editTitle.setText("");
+        editAddress.setText("");
+        editPrompt.setText("");
+    }
 }
+
