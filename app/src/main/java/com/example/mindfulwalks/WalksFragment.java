@@ -42,7 +42,7 @@ public class WalksFragment extends Fragment {
         adapter = new CheckpointAdapter(checkpointList, c -> {
             // Open detail screen when clicked
             Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
-            intent.putExtra("id", c.id);
+            intent.putExtra("checkpointId", c.id);
             startActivity(intent);
         });
 
