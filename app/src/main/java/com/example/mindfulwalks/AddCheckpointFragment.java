@@ -17,6 +17,9 @@ public class AddCheckpointFragment extends Fragment {
     EditText editTitle, editAddress, editPrompt, editTags;
     Button btnSave;
 
+    private boolean isEditMode = false;
+    private int editCheckpointId = -1;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -31,9 +34,26 @@ public class AddCheckpointFragment extends Fragment {
         editTags = view.findViewById(R.id.editTags);
         btnSave = view.findViewById(R.id.btnSaveCheckpoint);
 
+        checkIfEditMode();
+
         btnSave.setOnClickListener(v -> saveCheckpoint());
 
         return view;
+    }
+
+    private void checkIfEditMode() {
+        Bundle args = getArguments();
+        if (args != null && args.containsKey("editCheckpointId")) {
+            isEditMode = true;
+            editCheckpointId = args.getInt("editCheckpointId");
+
+            editTitle.setText(args.getString("editTitle"));
+            editAddress.setText(args.getString("editAddress"));
+            editPrompt.setText(args.getString("editPrompt"));
+            editTags.setText(args.getString("editTags"));
+
+            btnSave.setText("Update Checkpoint");
+        }
     }
 
     private void saveCheckpoint() {
@@ -57,26 +77,58 @@ public class AddCheckpointFragment extends Fragment {
             return;
         }
 
-        // For now we save placeholder coordinates
-        double lat = 0.0;
+        if (title.length() > 100) {
+            editTitle.setError("Title is too long (max 100 characters)");
+            return;
+        }
+        if (address.length() > 200) {
+            editAddress.setError("Address is too long (max 200 characters)");
+            return;
+        }
+        if (prompt.length() > 500) {
+            editPrompt.setError("Prompt is too long (max 500 characters)");
+            return;
+        }
+
+        double lat = 0.0;   // TODO: Replace with actual map input
         double lng = 0.0;
 
-        // Create checkpoint
-        Checkpoint cp = new Checkpoint(title, address, prompt, tags, lng, lat);
-
-        // Save to Room database
         AppDatabase db = AppDatabase.getInstance(requireContext());
-        db.checkpointDao().insertCheckpoint(cp);
 
-        Toast.makeText(getActivity(),
-                "Checkpoint saved successfully!",
-                Toast.LENGTH_SHORT).show();
+        if (isEditMode) {
 
-        // Clear fields
-        editTitle.setText("");
-        editAddress.setText("");
-        editPrompt.setText("");
+            // Load existing checkpoint
+            Checkpoint cp = db.checkpointDao().getCheckpointById(editCheckpointId);
+
+            cp.title = title;
+            cp.address = address;
+            cp.prompt = prompt;
+            cp.tags = tags;
+            cp.latitude = lat;
+            cp.longitude = lng;
+
+            db.checkpointDao().updateCheckpoint(cp);
+
+            Toast.makeText(getActivity(),
+                    "✓ Checkpoint updated successfully!",
+                    Toast.LENGTH_SHORT).show();
+
+            getParentFragmentManager().popBackStack();
+
+        } else {
+
+            // Create new checkpoint
+            Checkpoint cp = new Checkpoint(title, address, prompt, tags, lat, lng);
+            db.checkpointDao().insertCheckpoint(cp);
+
+            Toast.makeText(getActivity(),
+                    "✓ Checkpoint \"" + title + "\" saved successfully!",
+                    Toast.LENGTH_LONG).show();
+
+            editTitle.setText("");
+            editAddress.setText("");
+            editPrompt.setText("");
+            editTags.setText("");
+        }
     }
-
 }
-
