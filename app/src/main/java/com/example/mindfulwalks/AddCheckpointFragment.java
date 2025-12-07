@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment;
 
 public class AddCheckpointFragment extends Fragment {
 
-    EditText editTitle, editAddress, editPrompt;
+    EditText editTitle, editAddress, editPrompt, editTags;
     Button btnSave;
 
     @Nullable
@@ -28,6 +28,7 @@ public class AddCheckpointFragment extends Fragment {
         editTitle = view.findViewById(R.id.editTitle);
         editAddress = view.findViewById(R.id.editAddress);
         editPrompt = view.findViewById(R.id.editPrompt);
+        editTags = view.findViewById(R.id.editTags);
         btnSave = view.findViewById(R.id.btnSaveCheckpoint);
 
         btnSave.setOnClickListener(v -> saveCheckpoint());
@@ -40,6 +41,7 @@ public class AddCheckpointFragment extends Fragment {
         String title = editTitle.getText().toString().trim();
         String address = editAddress.getText().toString().trim();
         String prompt = editPrompt.getText().toString().trim();
+        String tags = editTags.getText().toString().trim();
 
         // Validation
         if (title.isEmpty()) {
@@ -60,7 +62,7 @@ public class AddCheckpointFragment extends Fragment {
         double lng = 0.0;
 
         // Create checkpoint
-        Checkpoint cp = new Checkpoint(title, address, prompt, lat, lng);
+        Checkpoint cp = new Checkpoint(title, address, prompt, tags, lng, lat);
 
         // Save to Room database
         AppDatabase db = AppDatabase.getInstance(requireContext());

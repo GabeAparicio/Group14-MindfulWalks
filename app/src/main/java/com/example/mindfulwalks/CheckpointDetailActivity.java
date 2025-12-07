@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class CheckpointDetailActivity extends AppCompatActivity {
 
-    private TextView txtTitle, txtAddress, txtPrompt;
+    private TextView txtTitle, txtAddress, txtPrompt, txtTags;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -24,6 +24,7 @@ public class CheckpointDetailActivity extends AppCompatActivity {
         txtTitle = findViewById(R.id.detailTitle);
         txtAddress = findViewById(R.id.detailAddress);
         txtPrompt = findViewById(R.id.detailPrompt);
+        txtTags = findViewById(R.id.detailTags);
 
         // Read ID from intent
         int id = getIntent().getIntExtra("checkpointId", -1);
@@ -37,6 +38,7 @@ public class CheckpointDetailActivity extends AppCompatActivity {
                 txtTitle.setText(cp.title);
                 txtAddress.setText(cp.address);
                 txtPrompt.setText(cp.prompt);
+                txtTags.setText(cp.tags);
             }
         }
     }

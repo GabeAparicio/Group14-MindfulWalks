@@ -37,6 +37,16 @@
             android:textSize="16sp"
             android:lineSpacingExtra="4dp" />
 
+        <!-- Tags -->
+        <TextView
+            android:id="@+id/detailTags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="16sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp" />
+
     </LinearLayout>
 
 </ScrollView>
