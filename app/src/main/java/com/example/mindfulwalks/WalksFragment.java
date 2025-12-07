@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -18,6 +20,13 @@ public class WalksFragment extends Fragment {
 
     RecyclerView recyclerView;
     CheckpointAdapter adapter;
+
+    // ⭐ NEW — register result listener
+    private final ActivityResultLauncher<Intent> detailLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                // Anytime user edits OR deletes → refresh list
+                loadCheckpoints();
+            });
 
     @Nullable
     @Override
@@ -39,14 +48,16 @@ public class WalksFragment extends Fragment {
         AppDatabase db = AppDatabase.getInstance(requireContext());
         List<Checkpoint> checkpointList = db.checkpointDao().getAllCheckpoints();
 
-        adapter = new CheckpointAdapter(checkpointList, c -> {
-            // Open detail screen when clicked
+        adapter = new CheckpointAdapter(checkpointList, checkpoint -> {
+
             Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
-            intent.putExtra("checkpointId", c.id);
-            startActivity(intent);
+            intent.putExtra("checkpointId", checkpoint.id);
+
+            detailLauncher.launch(intent);
+
         });
 
         recyclerView.setAdapter(adapter);
-
     }
 }
+
