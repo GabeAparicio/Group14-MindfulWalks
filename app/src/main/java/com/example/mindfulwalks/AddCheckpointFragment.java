@@ -17,6 +17,9 @@ public class AddCheckpointFragment extends Fragment {
     EditText editTitle, editAddress, editPrompt;
     Button btnSave;
 
+    private boolean isEditMode = false;
+    private int editCheckpointId = -1;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -30,9 +33,25 @@ public class AddCheckpointFragment extends Fragment {
         editPrompt = view.findViewById(R.id.editPrompt);
         btnSave = view.findViewById(R.id.btnSaveCheckpoint);
 
+        checkIfEditMode();
+
         btnSave.setOnClickListener(v -> saveCheckpoint());
 
         return view;
+    }
+
+    private void checkIfEditMode() {
+        Bundle args = getArguments();
+        if (args != null && args.containsKey("editCheckpointId")) {
+            isEditMode = true;
+            editCheckpointId = args.getInt("editCheckpointId");
+
+            editTitle.setText(args.getString("editTitle"));
+            editAddress.setText(args.getString("editAddress"));
+            editPrompt.setText(args.getString("editPrompt"));
+
+            btnSave.setText("Update Checkpoint");
+        }
     }
 
     private void saveCheckpoint() {
@@ -41,7 +60,6 @@ public class AddCheckpointFragment extends Fragment {
         String address = editAddress.getText().toString().trim();
         String prompt = editPrompt.getText().toString().trim();
 
-        // Validation
         if (title.isEmpty()) {
             editTitle.setError("Title is required");
             return;
@@ -55,25 +73,54 @@ public class AddCheckpointFragment extends Fragment {
             return;
         }
 
-        // For now we save placeholder coordinates
+        if (title.length() > 100) {
+            editTitle.setError("Title is too long (max 100 characters)");
+            return;
+        }
+
+        if (address.length() > 200) {
+            editAddress.setError("Address is too long (max 200 characters)");
+            return;
+        }
+
+        if (prompt.length() > 500) {
+            editPrompt.setError("Prompt is too long (max 500 characters)");
+            return;
+        }
+
         double lat = 0.0;
         double lng = 0.0;
 
-        // Create checkpoint
-        Checkpoint cp = new Checkpoint(title, address, prompt, lat, lng);
-
-        // Save to Room database
         AppDatabase db = AppDatabase.getInstance(requireContext());
-        db.checkpointDao().insertCheckpoint(cp);
 
-        Toast.makeText(getActivity(),
-                "Checkpoint saved successfully!",
-                Toast.LENGTH_SHORT).show();
+        if (isEditMode) {
+            Checkpoint cp = db.checkpointDao().getCheckpointById(editCheckpointId);
+            cp.title = title;
+            cp.address = address;
+            cp.prompt = prompt;
+            cp.latitude = lat;
+            cp.longitude = lng;
 
-        // Clear fields
-        editTitle.setText("");
-        editAddress.setText("");
-        editPrompt.setText("");
+            db.checkpointDao().updateCheckpoint(cp);
+
+            Toast.makeText(getActivity(),
+                    "✓ Checkpoint updated successfully!",
+                    Toast.LENGTH_SHORT).show();
+
+            getParentFragmentManager().popBackStack();
+
+        } else {
+            Checkpoint cp = new Checkpoint(title, address, prompt, lat, lng);
+            db.checkpointDao().insertCheckpoint(cp);
+
+            Toast.makeText(getActivity(),
+                    "✓ Checkpoint \"" + title + "\" saved successfully!",
+                    Toast.LENGTH_LONG).show();
+
+            editTitle.setText("");
+            editAddress.setText("");
+            editPrompt.setText("");
+        }
     }
 
 }

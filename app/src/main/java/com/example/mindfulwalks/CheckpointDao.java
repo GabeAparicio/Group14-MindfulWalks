@@ -30,3 +30,16 @@ public interface CheckpointDao {
     Checkpoint getCheckpointById(int id);
 }
 
+
+    @Update
+    void updateCheckpoint(Checkpoint checkpoint);
+
+    @Delete
+    void deleteCheckpoint(Checkpoint checkpoint);
+
+    @Query("DELETE FROM checkpoints WHERE id = :id")
+    void deleteById(int id);
+
+    @Query("SELECT * FROM checkpoints WHERE title LIKE '%' || :searchTerm || '%' ORDER BY id DESC")
+    List<Checkpoint> searchByName(String searchTerm);
+}
