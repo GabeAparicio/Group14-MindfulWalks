@@ -43,28 +43,17 @@ public class AddCheckpointFragment extends Fragment {
         String prompt = editPrompt.getText().toString().trim();
         String tags = editTags.getText().toString().trim();
 
-        // Validation
-        if (title.isEmpty()) {
-            editTitle.setError("Title is required");
-            return;
-        }
-        if (address.isEmpty()) {
-            editAddress.setError("Address is required");
-            return;
-        }
-        if (prompt.isEmpty()) {
-            editPrompt.setError("Prompt is required");
-            return;
-        }
+        if (title.isEmpty()) { editTitle.setError("Title is required"); return; }
+        if (address.isEmpty()) { editAddress.setError("Address is required"); return; }
+        if (prompt.isEmpty()) { editPrompt.setError("Prompt is required"); return; }
 
-        // For now we save placeholder coordinates
+        // Placeholder coordinates
         double lat = 0.0;
         double lng = 0.0;
 
-        // Create checkpoint
-        Checkpoint cp = new Checkpoint(title, address, prompt, tags, lng, lat);
+        // CORRECT constructor order
+        Checkpoint cp = new Checkpoint(title, address, prompt, tags, lat, lng);
 
-        // Save to Room database
         AppDatabase db = AppDatabase.getInstance(requireContext());
         db.checkpointDao().insertCheckpoint(cp);
 
@@ -72,11 +61,9 @@ public class AddCheckpointFragment extends Fragment {
                 "Checkpoint saved successfully!",
                 Toast.LENGTH_SHORT).show();
 
-        // Clear fields
         editTitle.setText("");
         editAddress.setText("");
         editPrompt.setText("");
+        editTags.setText("");
     }
-
 }
-
