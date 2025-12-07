@@ -41,7 +41,7 @@ public class AddCheckpointFragment extends Fragment {
         String address = editAddress.getText().toString().trim();
         String prompt = editPrompt.getText().toString().trim();
 
-        // Improved validation
+        // Validation
         if (title.isEmpty()) {
             editTitle.setError("Title is required");
             return;
@@ -55,20 +55,26 @@ public class AddCheckpointFragment extends Fragment {
             return;
         }
 
-        int newId = CheckpointStorage.getNextId();
+        // For now we save placeholder coordinates
+        double lat = 0.0;
+        double lng = 0.0;
 
-        Checkpoint cp = new Checkpoint(newId, title, address, prompt);
+        // Create checkpoint
+        Checkpoint cp = new Checkpoint(title, address, prompt, lat, lng);
 
-        CheckpointStorage.addCheckpoint(cp);
+        // Save to Room database
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        db.checkpointDao().insertCheckpoint(cp);
 
         Toast.makeText(getActivity(),
                 "Checkpoint saved successfully!",
                 Toast.LENGTH_SHORT).show();
 
-        // Clear input fields
+        // Clear fields
         editTitle.setText("");
         editAddress.setText("");
         editPrompt.setText("");
     }
+
 }
 

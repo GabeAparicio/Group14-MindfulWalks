@@ -16,8 +16,8 @@ import java.util.List;
 
 public class WalksFragment extends Fragment {
 
-    private RecyclerView recyclerView;
-    private CheckpointAdapter adapter;
+    RecyclerView recyclerView;
+    CheckpointAdapter adapter;
 
     @Nullable
     @Override
@@ -30,28 +30,23 @@ public class WalksFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerCheckpoints);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        loadList();
+        loadCheckpoints();
 
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadList();
-    }
+    private void loadCheckpoints() {
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        List<Checkpoint> checkpointList = db.checkpointDao().getAllCheckpoints();
 
-    private void loadList() {
-        List<Checkpoint> list = CheckpointStorage.getCheckpoints();
-
-        adapter = new CheckpointAdapter(list, checkpoint -> {
-            // On item click → open detail screen
-            Intent i = new Intent(getActivity(), CheckpointDetailActivity.class);
-            i.putExtra("checkpointId", checkpoint.id);
-            startActivity(i);
+        adapter = new CheckpointAdapter(checkpointList, c -> {
+            // Open detail screen when clicked
+            Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
+            intent.putExtra("id", c.id);
+            startActivity(intent);
         });
 
         recyclerView.setAdapter(adapter);
+
     }
 }
-

@@ -29,7 +29,9 @@ public class CheckpointDetailActivity extends AppCompatActivity {
         int id = getIntent().getIntExtra("checkpointId", -1);
 
         if (id != -1) {
-            Checkpoint cp = CheckpointStorage.getById(id);
+
+            AppDatabase db = AppDatabase.getInstance(this);
+            Checkpoint cp = db.checkpointDao().getCheckpointById(id);
 
             if (cp != null) {
                 txtTitle.setText(cp.title);
