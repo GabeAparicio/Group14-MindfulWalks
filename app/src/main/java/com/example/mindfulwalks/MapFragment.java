@@ -159,4 +159,5 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onDestroy();
         executorService.shutdown();
     }
+
 }

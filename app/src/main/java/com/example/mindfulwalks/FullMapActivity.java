@@ -1,6 +1,8 @@
 package com.example.mindfulwalks;
 
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,6 +46,10 @@ public class FullMapActivity extends AppCompatActivity implements OnMapReadyCall
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
+
+        String apiKey = getString(R.string.google_maps_key);
+        Log.d("MAP_KEY_TEST", "Injected key = " + apiKey);
+
         mMap = googleMap;
 
         if (latitude != 0.0 || longitude != 0.0) {

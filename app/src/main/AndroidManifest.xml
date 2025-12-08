@@ -17,7 +17,7 @@
         android:theme="@style/Theme.MindfulWalks">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBGJkvPUID9qP5Yo-nfK9FoKkP7TbDhb7U" />
+            android:value="${MAPS_API_KEY}" />
 
 
         <activity
