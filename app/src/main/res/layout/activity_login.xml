@@ -69,14 +69,7 @@
             android:backgroundTint="#1B5E20"
             style="@style/Widget.MaterialComponents.Button" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Prototype - Any credentials work"
-            android:textSize="12sp"
-            android:textColor="#999999"
-            android:layout_marginTop="24dp"
-            android:textStyle="italic" />
+
 
     </LinearLayout>
 

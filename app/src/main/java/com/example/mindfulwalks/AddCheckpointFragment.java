@@ -94,10 +94,33 @@ public class AddCheckpointFragment extends Fragment {
             return;
         }
 
+        // Geocode the address to get coordinates
         double lat = 0.0;
         double lng = 0.0;
 
+        try {
+            android.location.Geocoder geocoder = new android.location.Geocoder(requireContext());
+            java.util.List<android.location.Address> addresses = geocoder.getFromLocationName(address, 1);
+
+            if (addresses != null && !addresses.isEmpty()) {
+                android.location.Address location = addresses.get(0);
+                lat = location.getLatitude();
+                lng = location.getLongitude();
+            } else {
+                Toast.makeText(getActivity(),
+                        "⚠ Address not found. Checkpoint saved without location.",
+                        Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(getActivity(),
+                    "⚠ Could not geocode address. Checkpoint saved without location.",
+                    Toast.LENGTH_LONG).show();
+        }
+
         AppDatabase db = AppDatabase.getInstance(requireContext());
+
+        final double finalLat = lat;
+        final double finalLng = lng;
 
         executorService.execute(() -> {
             if (isEditMode) {
@@ -107,8 +130,8 @@ public class AddCheckpointFragment extends Fragment {
                 cp.address = address;
                 cp.prompt = prompt;
                 cp.tags = tags;
-                cp.latitude = lat;
-                cp.longitude = lng;
+                cp.latitude = finalLat;
+                cp.longitude = finalLng;
 
                 db.checkpointDao().updateCheckpoint(cp);
 
@@ -123,13 +146,17 @@ public class AddCheckpointFragment extends Fragment {
                 }
 
             } else {
-                Checkpoint cp = new Checkpoint(title, address, prompt, tags, lat, lng);
+                Checkpoint cp = new Checkpoint(title, address, prompt, tags, finalLat, finalLng);
                 db.checkpointDao().insertCheckpoint(cp);
 
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
+                        String message = (finalLat != 0.0 && finalLng != 0.0)
+                                ? "✓ Checkpoint \"" + title + "\" saved with location!"
+                                : "✓ Checkpoint \"" + title + "\" saved!";
+
                         Toast.makeText(getActivity(),
-                                "✓ Checkpoint \"" + title + "\" saved successfully!",
+                                message,
                                 Toast.LENGTH_LONG).show();
 
                         editTitle.setText("");
