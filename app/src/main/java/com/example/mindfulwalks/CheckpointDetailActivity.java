@@ -21,6 +21,7 @@ public class CheckpointDetailActivity extends AppCompatActivity {
 
     private Checkpoint checkpoint;
     private AppDatabase db;
+    private TextView txtTitle, txtAddress, txtPrompt, txtTags;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,60 +55,13 @@ public class CheckpointDetailActivity extends AppCompatActivity {
         btnDelete = findViewById(R.id.btnDelete);
         btnShare = findViewById(R.id.btnShareEmail);
 
-
-        editTitle.setText(checkpoint.title);
-        editAddress.setText(checkpoint.address);
-        editPrompt.setText(checkpoint.prompt);
-        ratingBar.setRating(checkpoint.rating);
-
-        txtTimestamp.setText("Created: " + android.text.format.DateFormat.format("MMM dd, yyyy • h:mm a", checkpoint.timestamp));
-
-
-        btnSave.setOnClickListener(v -> {
-            checkpoint.title = editTitle.getText().toString().trim();
-            checkpoint.address = editAddress.getText().toString().trim();
-            checkpoint.prompt = editPrompt.getText().toString().trim();
-
-            db.checkpointDao().updateCheckpoint(checkpoint);
-            Toast.makeText(this, "Updated successfully!", Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK);
-            finish();
-        });
-
-
-        btnDelete.setOnClickListener(v -> {
-            db.checkpointDao().deleteCheckpoint(checkpoint);
-            Toast.makeText(this, "Deleted!", Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK);
-            finish();
-        });
-
-
-        ratingBar.setOnRatingBarChangeListener((rb, rating, fromUser) -> {
-            db.checkpointDao().updateRating(checkpoint.id, rating);
-        });
-
-
-        btnShare.setOnClickListener(v -> shareViaEmail());
-    }
-
-    private void shareViaEmail() {
-
-        String subject = "Mindful Walk Checkpoint: " + checkpoint.title;
-
-        String message =
-                "Title: " + checkpoint.title + "\n" +
-                        "Address: " + checkpoint.address + "\n" +
-                        "Prompt: " + checkpoint.prompt + "\n" +
-                        "Rating: " + checkpoint.rating + " stars\n\n" +
-                        "Created on: " + android.text.format.DateFormat.format("MMM dd, yyyy • h:mm a", checkpoint.timestamp);
-
-        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-        emailIntent.setData(Uri.parse("mailto:"));
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        emailIntent.putExtra(Intent.EXTRA_TEXT, message);
-
-        startActivity(Intent.createChooser(emailIntent, "Share via Email"));
+            if (cp != null) {
+                txtTitle.setText(cp.title);
+                txtAddress.setText(cp.address);
+                txtPrompt.setText(cp.prompt);
+                txtTags.setText(cp.tags);
+            }
+        }
     }
 
     @Override

@@ -24,6 +24,12 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"/>
 
+    <EditText
+        android:id="@+id/editTags"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tags (e.g. nature,quiet,forest)" />
+
     <Button
         android:id="@+id/btnSaveCheckpoint"
         android:text="Save Checkpoint"

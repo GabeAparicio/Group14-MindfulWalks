@@ -12,6 +12,7 @@ public class Checkpoint {
     public String title;
     public String address;
     public String prompt;
+    public String tags;
 
     public double latitude;
     public double longitude;
@@ -24,11 +25,14 @@ public class Checkpoint {
         this.title = title;
         this.address = address;
         this.prompt = prompt;
+        this.tags = tags;
         this.latitude = latitude;
         this.longitude = longitude;
 
         this.timestamp = System.currentTimeMillis();
         this.rating = 0f; // default rating
     }
+
+
 }
 
