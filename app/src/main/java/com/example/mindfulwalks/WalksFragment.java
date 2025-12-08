@@ -5,11 +5,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,6 +22,8 @@ public class WalksFragment extends Fragment {
 
     RecyclerView recyclerView;
     CheckpointAdapter adapter;
+    SearchView searchView;
+    AppDatabase db;
 
     // ⭐ NEW — register result listener
     private final ActivityResultLauncher<Intent> detailLauncher =
@@ -39,14 +43,54 @@ public class WalksFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerCheckpoints);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        searchView = view.findViewById(R.id.searchView);
+
+        db = AppDatabase.getInstance(requireContext());
+
+        setupSearch();
         loadCheckpoints();
 
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadCheckpoints();
+    }
+
+    private void setupSearch() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                performSearch(newText);
+                return true;
+            }
+        });
+    }
+
+    private void performSearch(String query) {
+        List<Checkpoint> checkpointList;
+
+        if (query == null || query.trim().isEmpty()) {
+            checkpointList = db.checkpointDao().getAllCheckpoints();
+        } else {
+            checkpointList = db.checkpointDao().searchByName(query);
+        }
+
+        updateAdapter(checkpointList);
+    }
+
     private void loadCheckpoints() {
-        AppDatabase db = AppDatabase.getInstance(requireContext());
         List<Checkpoint> checkpointList = db.checkpointDao().getAllCheckpoints();
+        updateAdapter(checkpointList);
+    }
 
         adapter = new CheckpointAdapter(checkpointList, checkpoint -> {
 
@@ -56,6 +100,36 @@ public class WalksFragment extends Fragment {
             detailLauncher.launch(intent);
 
         });
+
+    private void updateAdapter(List<Checkpoint> checkpointList) {
+        adapter = new CheckpointAdapter(checkpointList,
+                c -> {
+                    Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
+                    intent.putExtra("checkpointId", c.id);
+                    startActivity(intent);
+                },
+                (c, position) -> {
+                    db.checkpointDao().deleteById(c.id);
+                    adapter.removeItem(position);
+                    Toast.makeText(getContext(), "Checkpoint deleted", Toast.LENGTH_SHORT).show();
+                },
+                c -> {
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("editCheckpointId", c.id);
+                    bundle.putString("editTitle", c.title);
+                    bundle.putString("editAddress", c.address);
+                    bundle.putString("editPrompt", c.prompt);
+
+                    AddCheckpointFragment editFragment = new AddCheckpointFragment();
+                    editFragment.setArguments(bundle);
+
+                    getParentFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.main_container, editFragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
+        );
 
         recyclerView.setAdapter(adapter);
     }
