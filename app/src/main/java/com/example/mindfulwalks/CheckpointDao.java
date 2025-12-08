@@ -14,11 +14,22 @@ public interface CheckpointDao {
     @Insert
     void insertCheckpoint(Checkpoint checkpoint);
 
+    @Update
+    void updateCheckpoint(Checkpoint checkpoint);
+
+    @Delete
+    void deleteCheckpoint(Checkpoint checkpoint);
+
+    @Query("UPDATE checkpoints SET rating = :rating WHERE id = :id")
+    void updateRating(int id, float rating);
+
     @Query("SELECT * FROM checkpoints ORDER BY id DESC")
     List<Checkpoint> getAllCheckpoints();
 
     @Query("SELECT * FROM checkpoints WHERE id = :id LIMIT 1")
     Checkpoint getCheckpointById(int id);
+}
+
 
     @Update
     void updateCheckpoint(Checkpoint checkpoint);
