@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // For prototype, accept any credentials
+
         Toast.makeText(this, "Welcome to Mindful Walks!", Toast.LENGTH_SHORT).show();
 
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
