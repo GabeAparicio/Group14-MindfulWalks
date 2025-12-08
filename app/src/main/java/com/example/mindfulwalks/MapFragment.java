@@ -25,11 +25,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private AppDatabase db;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Nullable
     @Override
@@ -67,31 +70,39 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             requestPermissions(new String[]{ Manifest.permission.ACCESS_FINE_LOCATION }, 1001);
         }
 
-        loadCheckpointMarkers();
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            loadCheckpointMarkers();
+        }, 500);
     }
 
     private void loadCheckpointMarkers() {
-        List<Checkpoint> checkpoints = db.checkpointDao().getAllCheckpoints();
+        executorService.execute(() -> {
+            List<Checkpoint> checkpoints = db.checkpointDao().getAllCheckpoints();
 
-        for (Checkpoint cp : checkpoints) {
-            if (cp.latitude != 0.0 || cp.longitude != 0.0) {
-                LatLng position = new LatLng(cp.latitude, cp.longitude);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    for (Checkpoint cp : checkpoints) {
+                        if (cp.latitude != 0.0 || cp.longitude != 0.0) {
+                            LatLng position = new LatLng(cp.latitude, cp.longitude);
 
-                mMap.addMarker(new MarkerOptions()
-                        .position(position)
-                        .title(cp.title)
-                        .snippet(cp.address));
-            }
-        }
+                            mMap.addMarker(new MarkerOptions()
+                                    .position(position)
+                                    .title(cp.title)
+                                    .snippet(cp.address));
+                        }
+                    }
 
-        mMap.setOnInfoWindowClickListener(marker -> {
-            for (Checkpoint cp : checkpoints) {
-                if (cp.title.equals(marker.getTitle())) {
-                    Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
-                    intent.putExtra("checkpointId", cp.id);
-                    startActivity(intent);
-                    break;
-                }
+                    mMap.setOnInfoWindowClickListener(marker -> {
+                        for (Checkpoint cp : checkpoints) {
+                            if (cp.title.equals(marker.getTitle())) {
+                                Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
+                                intent.putExtra("checkpointId", cp.id);
+                                startActivity(intent);
+                                break;
+                            }
+                        }
+                    });
+                });
             }
         });
     }
@@ -141,5 +152,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             mMap.clear();
             loadCheckpointMarkers();
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 }

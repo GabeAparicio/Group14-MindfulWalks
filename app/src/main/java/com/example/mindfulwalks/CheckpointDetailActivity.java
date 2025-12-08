@@ -12,6 +12,9 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class CheckpointDetailActivity extends AppCompatActivity {
 
     private EditText editTitle, editAddress, editPrompt;
@@ -21,6 +24,7 @@ public class CheckpointDetailActivity extends AppCompatActivity {
 
     private Checkpoint checkpoint;
     private AppDatabase db;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -35,33 +39,38 @@ public class CheckpointDetailActivity extends AppCompatActivity {
         db = AppDatabase.getInstance(this);
 
         int id = getIntent().getIntExtra("checkpointId", -1);
-        checkpoint = db.checkpointDao().getCheckpointById(id);
 
-        if (checkpoint == null) {
-            Toast.makeText(this, "Checkpoint not found!", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        executorService.execute(() -> {
+            checkpoint = db.checkpointDao().getCheckpointById(id);
 
-        editTitle = findViewById(R.id.editTitleDetail);
-        editAddress = findViewById(R.id.editAddressDetail);
-        editPrompt = findViewById(R.id.editPromptDetail);
-        txtTimestamp = findViewById(R.id.detailTimestamp);
-        txtTags = findViewById(R.id.detailTags);
-        ratingBar = findViewById(R.id.ratingBar);
-        btnSave = findViewById(R.id.btnSaveEdit);
-        btnDelete = findViewById(R.id.btnDelete);
-        btnShare = findViewById(R.id.btnShareEmail);
-        btnDirections = findViewById(R.id.btnDirections);
-        btnFullMap = findViewById(R.id.btnFullMap);
+            runOnUiThread(() -> {
+                if (checkpoint == null) {
+                    Toast.makeText(this, "Checkpoint not found!", Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
 
-        loadCheckpointData();
+                editTitle = findViewById(R.id.editTitleDetail);
+                editAddress = findViewById(R.id.editAddressDetail);
+                editPrompt = findViewById(R.id.editPromptDetail);
+                txtTimestamp = findViewById(R.id.detailTimestamp);
+                txtTags = findViewById(R.id.detailTags);
+                ratingBar = findViewById(R.id.ratingBar);
+                btnSave = findViewById(R.id.btnSaveEdit);
+                btnDelete = findViewById(R.id.btnDelete);
+                btnShare = findViewById(R.id.btnShareEmail);
+                btnDirections = findViewById(R.id.btnDirections);
+                btnFullMap = findViewById(R.id.btnFullMap);
 
-        btnSave.setOnClickListener(v -> saveChanges());
-        btnDelete.setOnClickListener(v -> deleteCheckpoint());
-        btnShare.setOnClickListener(v -> shareViaEmail());
-        btnDirections.setOnClickListener(v -> openDirections());
-        btnFullMap.setOnClickListener(v -> openFullMap());
+                loadCheckpointData();
+
+                btnSave.setOnClickListener(v -> saveChanges());
+                btnDelete.setOnClickListener(v -> deleteCheckpoint());
+                btnShare.setOnClickListener(v -> shareViaEmail());
+                btnDirections.setOnClickListener(v -> openDirections());
+                btnFullMap.setOnClickListener(v -> openFullMap());
+            });
+        });
     }
 
     private void loadCheckpointData() {
@@ -80,15 +89,25 @@ public class CheckpointDetailActivity extends AppCompatActivity {
         checkpoint.prompt = editPrompt.getText().toString().trim();
         checkpoint.rating = ratingBar.getRating();
 
-        db.checkpointDao().updateCheckpoint(checkpoint);
-        Toast.makeText(this, "Changes saved!", Toast.LENGTH_SHORT).show();
-        finish();
+        executorService.execute(() -> {
+            db.checkpointDao().updateCheckpoint(checkpoint);
+
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Changes saved!", Toast.LENGTH_SHORT).show();
+                finish();
+            });
+        });
     }
 
     private void deleteCheckpoint() {
-        db.checkpointDao().deleteById(checkpoint.id);
-        Toast.makeText(this, "Checkpoint deleted", Toast.LENGTH_SHORT).show();
-        finish();
+        executorService.execute(() -> {
+            db.checkpointDao().deleteById(checkpoint.id);
+
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Checkpoint deleted", Toast.LENGTH_SHORT).show();
+                finish();
+            });
+        });
     }
 
     private void shareViaEmail() {
@@ -141,6 +160,12 @@ public class CheckpointDetailActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         finish();
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 }
 

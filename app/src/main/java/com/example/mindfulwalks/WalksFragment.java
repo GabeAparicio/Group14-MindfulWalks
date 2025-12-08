@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class WalksFragment extends Fragment {
 
@@ -22,6 +24,7 @@ public class WalksFragment extends Fragment {
     CheckpointAdapter adapter;
     SearchView searchView;
     AppDatabase db;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Nullable
     @Override
@@ -67,20 +70,29 @@ public class WalksFragment extends Fragment {
     }
 
     private void performSearch(String query) {
-        List<Checkpoint> checkpointList;
+        executorService.execute(() -> {
+            List<Checkpoint> checkpointList;
 
-        if (query == null || query.trim().isEmpty()) {
-            checkpointList = db.checkpointDao().getAllCheckpoints();
-        } else {
-            checkpointList = db.checkpointDao().searchByNameOrTags(query);
-        }
+            if (query == null || query.trim().isEmpty()) {
+                checkpointList = db.checkpointDao().getAllCheckpoints();
+            } else {
+                checkpointList = db.checkpointDao().searchByNameOrTags(query);
+            }
 
-        updateAdapter(checkpointList);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> updateAdapter(checkpointList));
+            }
+        });
     }
 
     private void loadCheckpoints() {
-        List<Checkpoint> checkpointList = db.checkpointDao().getAllCheckpoints();
-        updateAdapter(checkpointList);
+        executorService.execute(() -> {
+            List<Checkpoint> checkpointList = db.checkpointDao().getAllCheckpoints();
+
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> updateAdapter(checkpointList));
+            }
+        });
     }
 
     private void updateAdapter(List<Checkpoint> checkpointList) {
@@ -91,9 +103,16 @@ public class WalksFragment extends Fragment {
                     startActivity(intent);
                 },
                 (c, position) -> {
-                    db.checkpointDao().deleteById(c.id);
-                    adapter.removeItem(position);
-                    Toast.makeText(getContext(), "Checkpoint deleted", Toast.LENGTH_SHORT).show();
+                    executorService.execute(() -> {
+                        db.checkpointDao().deleteById(c.id);
+
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                adapter.removeItem(position);
+                                Toast.makeText(getContext(), "Checkpoint deleted", Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    });
                 },
                 c -> {
                     Bundle bundle = new Bundle();
@@ -115,6 +134,12 @@ public class WalksFragment extends Fragment {
         );
 
         recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 }
 

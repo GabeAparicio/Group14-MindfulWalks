@@ -12,6 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class AddCheckpointFragment extends Fragment {
 
     EditText editTitle, editAddress, editPrompt, editTags;
@@ -19,6 +22,7 @@ public class AddCheckpointFragment extends Fragment {
 
     private boolean isEditMode = false;
     private int editCheckpointId = -1;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Nullable
     @Override
@@ -90,45 +94,57 @@ public class AddCheckpointFragment extends Fragment {
             return;
         }
 
-        double lat = 0.0;   // TODO: Replace with actual map input
+        double lat = 0.0;
         double lng = 0.0;
 
         AppDatabase db = AppDatabase.getInstance(requireContext());
 
-        if (isEditMode) {
+        executorService.execute(() -> {
+            if (isEditMode) {
+                Checkpoint cp = db.checkpointDao().getCheckpointById(editCheckpointId);
 
-            // Load existing checkpoint
-            Checkpoint cp = db.checkpointDao().getCheckpointById(editCheckpointId);
+                cp.title = title;
+                cp.address = address;
+                cp.prompt = prompt;
+                cp.tags = tags;
+                cp.latitude = lat;
+                cp.longitude = lng;
 
-            cp.title = title;
-            cp.address = address;
-            cp.prompt = prompt;
-            cp.tags = tags;
-            cp.latitude = lat;
-            cp.longitude = lng;
+                db.checkpointDao().updateCheckpoint(cp);
 
-            db.checkpointDao().updateCheckpoint(cp);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getActivity(),
+                                "✓ Checkpoint updated successfully!",
+                                Toast.LENGTH_SHORT).show();
 
-            Toast.makeText(getActivity(),
-                    "✓ Checkpoint updated successfully!",
-                    Toast.LENGTH_SHORT).show();
+                        getParentFragmentManager().popBackStack();
+                    });
+                }
 
-            getParentFragmentManager().popBackStack();
+            } else {
+                Checkpoint cp = new Checkpoint(title, address, prompt, tags, lat, lng);
+                db.checkpointDao().insertCheckpoint(cp);
 
-        } else {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getActivity(),
+                                "✓ Checkpoint \"" + title + "\" saved successfully!",
+                                Toast.LENGTH_LONG).show();
 
-            // Create new checkpoint
-            Checkpoint cp = new Checkpoint(title, address, prompt, tags, lat, lng);
-            db.checkpointDao().insertCheckpoint(cp);
+                        editTitle.setText("");
+                        editAddress.setText("");
+                        editPrompt.setText("");
+                        editTags.setText("");
+                    });
+                }
+            }
+        });
+    }
 
-            Toast.makeText(getActivity(),
-                    "✓ Checkpoint \"" + title + "\" saved successfully!",
-                    Toast.LENGTH_LONG).show();
-
-            editTitle.setText("");
-            editAddress.setText("");
-            editPrompt.setText("");
-            editTags.setText("");
-        }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 }
