@@ -43,6 +43,11 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".FullMapActivity"
+            android:exported="false"
+            android:parentActivityName=".CheckpointDetailActivity" />
+
     </application>
 
 </manifest>

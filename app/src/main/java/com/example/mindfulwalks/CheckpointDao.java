@@ -14,22 +14,11 @@ public interface CheckpointDao {
     @Insert
     void insertCheckpoint(Checkpoint checkpoint);
 
-    @Update
-    void updateCheckpoint(Checkpoint checkpoint);
-
-    @Delete
-    void deleteCheckpoint(Checkpoint checkpoint);
-
-    @Query("UPDATE checkpoints SET rating = :rating WHERE id = :id")
-    void updateRating(int id, float rating);
-
     @Query("SELECT * FROM checkpoints ORDER BY id DESC")
     List<Checkpoint> getAllCheckpoints();
 
     @Query("SELECT * FROM checkpoints WHERE id = :id LIMIT 1")
     Checkpoint getCheckpointById(int id);
-}
-
 
     @Update
     void updateCheckpoint(Checkpoint checkpoint);
@@ -40,6 +29,12 @@ public interface CheckpointDao {
     @Query("DELETE FROM checkpoints WHERE id = :id")
     void deleteById(int id);
 
+    @Query("UPDATE checkpoints SET rating = :rating WHERE id = :id")
+    void updateRating(int id, float rating);
+
     @Query("SELECT * FROM checkpoints WHERE title LIKE '%' || :searchTerm || '%' ORDER BY id DESC")
     List<Checkpoint> searchByName(String searchTerm);
+
+    @Query("SELECT * FROM checkpoints WHERE title LIKE '%' || :searchTerm || '%' OR tags LIKE '%' || :searchTerm || '%' ORDER BY id DESC")
+    List<Checkpoint> searchByNameOrTags(String searchTerm);
 }

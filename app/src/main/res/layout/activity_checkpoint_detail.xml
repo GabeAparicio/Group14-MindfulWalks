@@ -102,7 +102,24 @@
             android:paddingTop="16dp"
             android:paddingBottom="16dp" />
 
+        <!-- Directions Button -->
+        <Button
+            android:id="@+id/btnDirections"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Get Directions"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#1B5E20" />
+
+        <!-- Full Map Button -->
+        <Button
+            android:id="@+id/btnFullMap"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="View on Full Map"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#1B5E20" />
+
     </LinearLayout>
 
 </ScrollView>
-

@@ -2,6 +2,7 @@ package com.example.mindfulwalks;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -21,10 +22,14 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.List;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private AppDatabase db;
 
     @Nullable
     @Override
@@ -33,6 +38,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_map, container, false);
+
+        db = AppDatabase.getInstance(requireContext());
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
@@ -50,7 +57,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
-        // Check location permission
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
 
@@ -58,9 +64,36 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             centerOnUser();
 
         } else {
-            // Request permission
             requestPermissions(new String[]{ Manifest.permission.ACCESS_FINE_LOCATION }, 1001);
         }
+
+        loadCheckpointMarkers();
+    }
+
+    private void loadCheckpointMarkers() {
+        List<Checkpoint> checkpoints = db.checkpointDao().getAllCheckpoints();
+
+        for (Checkpoint cp : checkpoints) {
+            if (cp.latitude != 0.0 || cp.longitude != 0.0) {
+                LatLng position = new LatLng(cp.latitude, cp.longitude);
+
+                mMap.addMarker(new MarkerOptions()
+                        .position(position)
+                        .title(cp.title)
+                        .snippet(cp.address));
+            }
+        }
+
+        mMap.setOnInfoWindowClickListener(marker -> {
+            for (Checkpoint cp : checkpoints) {
+                if (cp.title.equals(marker.getTitle())) {
+                    Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
+                    intent.putExtra("checkpointId", cp.id);
+                    startActivity(intent);
+                    break;
+                }
+            }
+        });
     }
 
     private void centerOnUser() {
@@ -80,12 +113,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
         } catch (SecurityException ignored) {}
 
-        // Fallback if location isn't available
         LatLng toronto = new LatLng(43.6532, -79.3832);
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(toronto, 12f));
     }
 
-    // When user responds to permission request
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -100,6 +131,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 mMap.setMyLocationEnabled(true);
                 centerOnUser();
             }
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mMap != null) {
+            mMap.clear();
+            loadCheckpointMarkers();
         }
     }
 }

@@ -7,8 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -24,13 +22,6 @@ public class WalksFragment extends Fragment {
     CheckpointAdapter adapter;
     SearchView searchView;
     AppDatabase db;
-
-    // ⭐ NEW — register result listener
-    private final ActivityResultLauncher<Intent> detailLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                // Anytime user edits OR deletes → refresh list
-                loadCheckpoints();
-            });
 
     @Nullable
     @Override
@@ -81,7 +72,7 @@ public class WalksFragment extends Fragment {
         if (query == null || query.trim().isEmpty()) {
             checkpointList = db.checkpointDao().getAllCheckpoints();
         } else {
-            checkpointList = db.checkpointDao().searchByName(query);
+            checkpointList = db.checkpointDao().searchByNameOrTags(query);
         }
 
         updateAdapter(checkpointList);
@@ -91,15 +82,6 @@ public class WalksFragment extends Fragment {
         List<Checkpoint> checkpointList = db.checkpointDao().getAllCheckpoints();
         updateAdapter(checkpointList);
     }
-
-        adapter = new CheckpointAdapter(checkpointList, checkpoint -> {
-
-            Intent intent = new Intent(requireContext(), CheckpointDetailActivity.class);
-            intent.putExtra("checkpointId", checkpoint.id);
-
-            detailLauncher.launch(intent);
-
-        });
 
     private void updateAdapter(List<Checkpoint> checkpointList) {
         adapter = new CheckpointAdapter(checkpointList,
@@ -119,6 +101,7 @@ public class WalksFragment extends Fragment {
                     bundle.putString("editTitle", c.title);
                     bundle.putString("editAddress", c.address);
                     bundle.putString("editPrompt", c.prompt);
+                    bundle.putString("editTags", c.tags);
 
                     AddCheckpointFragment editFragment = new AddCheckpointFragment();
                     editFragment.setArguments(bundle);

@@ -21,18 +21,14 @@ public class Checkpoint {
 
     public float rating = 0f;
 
-    public Checkpoint(String title, String address, String prompt, double latitude, double longitude) {
+    public Checkpoint(String title, String address, String prompt, String tags, double latitude, double longitude) {
         this.title = title;
         this.address = address;
         this.prompt = prompt;
         this.tags = tags;
         this.latitude = latitude;
         this.longitude = longitude;
-
         this.timestamp = System.currentTimeMillis();
-        this.rating = 0f; // default rating
+        this.rating = 0f;
     }
-
-
 }
-

@@ -1,6 +1,3 @@
-implementation 'org.slf4j:slf4j-api:2.0.9'
-implementation 'org.slf4j:slf4j-simple:2.0.9'
-
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -35,6 +32,8 @@ android {
 }
 
 dependencies {
+    implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation("org.slf4j:slf4j-simple:2.0.9")
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -48,5 +47,4 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
-
 }
